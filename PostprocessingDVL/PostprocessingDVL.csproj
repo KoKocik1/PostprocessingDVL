@@ -147,7 +147,7 @@
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\source\repos\KeepCalmAndAllinone\ObjectLibrary\PartyMaker.csproj">
+    <ProjectReference Include="..\..\KeepCalmAndAllinone\ObjectLibrary\PartyMaker.csproj">
       <Project>{45a29776-20c4-4f92-9597-74d6d848b9dd}</Project>
       <Name>PartyMaker</Name>
     </ProjectReference>
