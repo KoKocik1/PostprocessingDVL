@@ -1,0 +1,41 @@
+---
+PathDoZapisu: C:\Users\SRRobotics\Desktop\
+PoprawkaDVLsecond: 0
+PoprawkaDVLmiliseconds: 0
+KursAhrsPoprawka: 0
+#sat/ahrs
+#ZrodloKursu: ahrs
+LiczLocalTime: true
+
+PrzedzialyCzasowe:
+- Poczatek: 2021-11-24 11:14:0.0
+  Koniec: 2021-11-24 11:40:0.0
+
+
+Initbarks:
+- Nazwa: baza
+  Rola: Kompas
+  Identyfikator: B
+  XCoordinate: 0.23
+  YCoordinate: 0
+  ZCoordinate: 0
+- Nazwa: rover
+  Rola: Kompas
+  Identyfikator: R
+  XCoordinate: 0
+  YCoordinate: 1.3
+  ZCoordinate: 0
+ 
+#- Nazwa: dvl
+#  Rola: Punkt
+#  Identyfikator: D
+#  XCoordinate: 0.09
+#  YCoordinate: 0.67
+#  ZCoordinate: 0.3
+#- Nazwa: odniesienie
+#  Rola: Refer
+#  Identyfikator: 0
+#  XCoordinate: 0
+#  YCoordinate: 0
+#  ZCoordinate: 0
+...

@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31129.286
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PostprocessingDVL", "PostprocessingDVL\PostprocessingDVL.csproj", "{74146D90-9823-41EA-A732-C0C2C899F9CD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PartyMaker", "..\..\source\repos\KeepCalmAndAllinone\ObjectLibrary\PartyMaker.csproj", "{45A29776-20C4-4F92-9597-74D6D848B9DD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{74146D90-9823-41EA-A732-C0C2C899F9CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74146D90-9823-41EA-A732-C0C2C899F9CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74146D90-9823-41EA-A732-C0C2C899F9CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74146D90-9823-41EA-A732-C0C2C899F9CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45A29776-20C4-4F92-9597-74D6D848B9DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45A29776-20C4-4F92-9597-74D6D848B9DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45A29776-20C4-4F92-9597-74D6D848B9DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45A29776-20C4-4F92-9597-74D6D848B9DD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D30A7903-84CD-497B-910F-7321ADA1E979}
+	EndGlobalSection
+EndGlobal
