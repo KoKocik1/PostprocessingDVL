@@ -27,13 +27,10 @@ namespace PostprocessingDVL
         public List<double> kursG = new List<double>();
         public List<double> kursA_xsens = new List<double>();
         public List<double> kursA_vn = new List<double>();
+        public List<double> kursWyliczony_xsens = new List<double>();
+        public List<double> kursWyliczony_vn = new List<double>();
         public List<DateTime> czas = new List<DateTime>();
 
-        /*
-        static void Main(string[] args)
-        {
-            Kurs program = new Kurs();
-        }*/
 
         public Kurs()
         {
@@ -63,8 +60,8 @@ namespace PostprocessingDVL
 
                     //******************************************************************************
 
-                    List<gps> odczytyGPS_B = ReadDB.readGPS(poczatek, koniec, "B", conn);
-                    List<gps> odczytyGPS_R = ReadDB.readGPS(poczatek, koniec, "R", conn);
+                    List<gps> odczytyGPS_B = ReadDB.readGPSfix41(poczatek, koniec, "B", conn);
+                    List<gps> odczytyGPS_R = ReadDB.readGPSfix41(poczatek, koniec, "R", conn);
                     List<initbark> geometricalPoints = config.Initbarks;
                     List<quat_ahrs> odczytyAhrs_xsens = ReadDB.readAhrsX(poczatek, koniec, conn);
                     List<quat_ahrs> odczytyAhrs_vn = ReadDB.readAhrsV(poczatek, koniec, conn);
@@ -109,39 +106,48 @@ namespace PostprocessingDVL
                     double biezacyKursAhrs_xsens = 0;
                     double biezacyKursAhrs_vn = 0;
                     double biezacyKursGps = 0;
+                    bool jestFix = false;
+                    bool seriaBrakuFix = false;
+                    double roznicaXsens = 0;
+                    double roznicaVN = 0;
 
                     List<dvl_position> wyniki_bottom = new List<dvl_position>();
                     List<dvl_position_water> wyniki_water = new List<dvl_position_water>();
                     List<double> wyniki_kurs = new List<double>();
 
 
-                    //Pomiary względem dna
+                    
                     foreach (gps odczyt in odczytyGPS_B)
                     {
-                        if (config.LiczLocalTime)
+                        if (odczyt.fix == 4)
+                            jestFix = true;
+                        else
+                            jestFix = false;
+
+                        if (odczytyGPS_R.Count != 0 && jestFix)
                         {
-                            if (odczytyGPS_R.Count != 0)
-                                biezacyGPS_R = FindElementsByTimePostProcessing.szukajPozycjiGPS((DateTime)odczyt.local_time, odczytyGPS_R);
+                            biezacyGPS_R = FindElementsByTimePostProcessing.szukajPozycjiGPS((DateTime)odczyt.local_time, odczytyGPS_R);
+
+                            if (biezacyGPS_R.fix != 4)
+                                jestFix = false;
                             else
-                                biezacyGPS_R = null;
+                                seriaBrakuFix = false;
+                            
                         }
                         else
                         {
-
-                            DateTime dataGps = (DateTime)odczyt.device_time;
-
-                            if (odczytyGPS_R.Count != 0)
-                            {
-                                biezacyGPS_R = FindElementsByTimePostProcessing.szukajPozycjiGPS(dataGps, odczytyGPS_R);
-                            }
-                            else
-                                biezacyGPS_R = null;
-
+                            biezacyGPS_R = null;
+                            jestFix = false;
                         }
 
-                        if (biezacyGPS_R != null && odczytyAhrs_xsens.Count!=0 && odczytyAhrs_vn.Count!=0)
+
+                        if (odczytyAhrs_xsens.Count!=0 && odczytyAhrs_vn.Count!=0)
                         {
-                            biezacyKursGps = GeoCalc.calcSatHeading(odczyt, biezacyGPS_R, geometricCorrection);
+                            if (jestFix)
+                                biezacyKursGps = GeoCalc.calcSatHeading(odczyt, biezacyGPS_R, geometricCorrection);
+                            else
+                                biezacyKursGps = 0;
+
                             quat_ahrs xd = FindElementsByTimePostProcessing.szukajPozycjiAhrs((DateTime)odczyt.local_time, odczytyAhrs_xsens);
                             biezacyKursAhrs_xsens = (double)xd.yaw;
 
@@ -150,10 +156,40 @@ namespace PostprocessingDVL
 
                             if (biezacyKursGps < 0)
                                 biezacyKursGps += 360;
+                            if (biezacyKursAhrs_vn < 0)
+                                biezacyKursAhrs_vn += 360;
+
                             kursA_xsens.Add(biezacyKursAhrs_xsens);
                             kursA_vn.Add(biezacyKursAhrs_vn);
                             kursG.Add(biezacyKursGps);
-                            czas.Add((DateTime)xd.time);
+                            czas.Add((DateTime)odczyt.local_time);
+
+                            if (jestFix)
+                            {
+                                kursWyliczony_xsens.Add(biezacyKursGps);
+                                kursWyliczony_vn.Add(biezacyKursGps);
+                            }
+                            else
+                            {
+                                if (!seriaBrakuFix)
+                                {
+                                    seriaBrakuFix = true;
+                                    roznicaXsens = kursG[kursG.Count-2] - biezacyKursAhrs_xsens;
+                                    roznicaVN = kursG[kursG.Count - 2] - biezacyKursAhrs_vn;
+                                }
+
+                                double a = biezacyKursAhrs_xsens + roznicaXsens;
+                                if (a < 0)
+                                    a += 360;
+                                kursWyliczony_xsens.Add(a);
+
+                                a = biezacyKursAhrs_vn + roznicaVN;
+                                if (a < 0)
+                                    a += 360;
+                                kursWyliczony_vn.Add(a);
+
+                            }
+
                         }
 
 
@@ -169,10 +205,12 @@ namespace PostprocessingDVL
                     int licznik = 0;
 
                     int powtorzenia = (kursA_vn.Count <= kursA_xsens.Count) ? kursA_vn.Count : kursA_xsens.Count;
+                    if (kursWyliczony_vn.Count < powtorzenia) powtorzenia = kursWyliczony_vn.Count;
+                    if (kursWyliczony_xsens.Count < powtorzenia) powtorzenia = kursWyliczony_xsens.Count;
 
                     for (int i = 0; i < powtorzenia; i++)
                     {
-                        csvWriter.addNewLine(kursA_xsens[i], kursA_vn[i], kursG[i], czas[i]);
+                        csvWriter.addNewLine(kursA_xsens[i], kursA_vn[i], kursG[i], czas[i],kursWyliczony_xsens[i],kursWyliczony_vn[i]);
                         licznik++;
                     }
                     csvWriter.Dispose();
@@ -188,6 +226,8 @@ namespace PostprocessingDVL
                 kursA_xsens.Clear();
                 kursA_vn.Clear();
                 kursG.Clear();
+                kursWyliczony_vn.Clear();
+                kursWyliczony_xsens.Clear();
                 czas.Clear();
             }
 
