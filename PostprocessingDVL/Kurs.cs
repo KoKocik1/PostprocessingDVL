@@ -25,7 +25,8 @@ namespace PostprocessingDVL
         public List<DateTime> koniecLista = new List<DateTime>();
 
         public List<double> kursG = new List<double>();
-        public List<double> kursA = new List<double>();
+        public List<double> kursA_xsens = new List<double>();
+        public List<double> kursA_vn = new List<double>();
         public List<DateTime> czas = new List<DateTime>();
 
         /*
@@ -65,9 +66,10 @@ namespace PostprocessingDVL
                     List<gps> odczytyGPS_B = ReadDB.readGPS(poczatek, koniec, "B", conn);
                     List<gps> odczytyGPS_R = ReadDB.readGPS(poczatek, koniec, "R", conn);
                     List<initbark> geometricalPoints = config.Initbarks;
-                    List<quat_ahrs> odczytyAhrs = ReadDB.readAhrs(poczatek, koniec, conn);
+                    List<quat_ahrs> odczytyAhrs_xsens = ReadDB.readAhrsX(poczatek, koniec, conn);
+                    List<quat_ahrs> odczytyAhrs_vn = ReadDB.readAhrsV(poczatek, koniec, conn);
 
-                    Console.WriteLine("Liczba odczytow: " + odczytyGPS_B.Count + " " + odczytyGPS_R.Count + " " + odczytyAhrs.Count);
+                    Console.WriteLine("Liczba odczytow: " + odczytyGPS_B.Count + " " + odczytyGPS_R.Count + " " + odczytyAhrs_xsens.Count + " " + odczytyAhrs_vn.Count);
                     //Console.ReadKey();
 
                     //******************************************************************************
@@ -104,7 +106,8 @@ namespace PostprocessingDVL
                     bool inicjalizacja_flag = false;
 
                     gps biezacyGPS_R = null;
-                    double biezacyKursAhrs = 0;
+                    double biezacyKursAhrs_xsens = 0;
+                    double biezacyKursAhrs_vn = 0;
                     double biezacyKursGps = 0;
 
                     List<dvl_position> wyniki_bottom = new List<dvl_position>();
@@ -136,15 +139,19 @@ namespace PostprocessingDVL
 
                         }
 
-                        if (biezacyGPS_R != null && odczytyAhrs.Count!=0)
+                        if (biezacyGPS_R != null && odczytyAhrs_xsens.Count!=0 && odczytyAhrs_vn.Count!=0)
                         {
                             biezacyKursGps = GeoCalc.calcSatHeading(odczyt, biezacyGPS_R, geometricCorrection);
-                            quat_ahrs xd = FindElementsByTimePostProcessing.szukajPozycjiAhrs((DateTime)odczyt.local_time, odczytyAhrs);
-                            biezacyKursAhrs = (double)xd.yaw;
+                            quat_ahrs xd = FindElementsByTimePostProcessing.szukajPozycjiAhrs((DateTime)odczyt.local_time, odczytyAhrs_xsens);
+                            biezacyKursAhrs_xsens = (double)xd.yaw;
+
+                            quat_ahrs xd1 = FindElementsByTimePostProcessing.szukajPozycjiAhrs((DateTime)odczyt.local_time, odczytyAhrs_vn);
+                            biezacyKursAhrs_vn = (double)xd1.yaw;
 
                             if (biezacyKursGps < 0)
                                 biezacyKursGps += 360;
-                            kursA.Add(biezacyKursAhrs);
+                            kursA_xsens.Add(biezacyKursAhrs_xsens);
+                            kursA_vn.Add(biezacyKursAhrs_vn);
                             kursG.Add(biezacyKursGps);
                             czas.Add((DateTime)xd.time);
                         }
@@ -161,9 +168,11 @@ namespace PostprocessingDVL
                     CsvWriter csvWriter = new CsvWriter(path);
                     int licznik = 0;
 
-                    for (int i = 0; i < kursA.Count; i++)
+                    int powtorzenia = (kursA_vn.Count <= kursA_xsens.Count) ? kursA_vn.Count : kursA_xsens.Count;
+
+                    for (int i = 0; i < powtorzenia; i++)
                     {
-                        csvWriter.addNewLine(kursA[i], kursG[i], czas[i]);
+                        csvWriter.addNewLine(kursA_xsens[i], kursA_vn[i], kursG[i], czas[i]);
                         licznik++;
                     }
                     csvWriter.Dispose();
@@ -176,7 +185,8 @@ namespace PostprocessingDVL
                     continue;
                 }
 
-                kursA.Clear();
+                kursA_xsens.Clear();
+                kursA_vn.Clear();
                 kursG.Clear();
                 czas.Clear();
             }
